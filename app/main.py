@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import posts_orm, users_orm, auth, votes_orm
+from .routers import posts_orm, users_orm, auth, votes_orm, users_id_orm
 from . import models
 from .database_orm import engine
 import socket
@@ -32,6 +32,7 @@ app.include_router(posts_orm.router) # /posts
 app.include_router(users_orm.router) # /users
 app.include_router(auth.router) # /login
 app.include_router(votes_orm.router) # /votes
+app.include_router(users_id_orm.router) # /userId
 
 
 hostname = socket.gethostname()

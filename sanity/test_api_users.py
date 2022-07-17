@@ -6,7 +6,7 @@ import pytest
 def test_root_path(client):
     root_response = client.get("/")
     #print(root_response.json())
-    assert root_response.json().get('message') == 'Hello, you have reached API Default Path'
+    assert 'Hello, you have reached API Default Path' in root_response.json().get('message')
     assert root_response.status_code == 200
 
 def test_create_user(client):
@@ -51,7 +51,7 @@ def test_create_posts(authenticate_test_user):
 
 def test_get_posts(create_posts, authenticate_test_user):
     get_posts = authenticate_test_user.get("/posts/?limit=1&skip=0&search=3rd")
-    #print(get_posts.json()[0])
+    print(get_posts.json()[0])
     get_posts_response = schemas.PostResponseWithLikes(**get_posts.json()[0])
     assert get_posts.status_code == 200
     assert get_posts_response.title == '3rd title dekho'
@@ -64,58 +64,68 @@ def test_unauthorized_get_posts(create_test_user, client):
 
 def test_get_posts_by_id(create_posts, authenticate_test_user):
     #print(f"LOOKATME {create_posts}")
-    get_correct_posts_by_id = authenticate_test_user.get(f"/posts/{create_posts[0]['id']}")
-    get_incorrect_posts_by_id = authenticate_test_user.get(f"/posts/{create_posts[0]['id'] + 5000}")
+    get_correct_posts_by_id = authenticate_test_user.get(f"/posts/{create_posts[0].id}")
+    get_incorrect_posts_by_id = authenticate_test_user.get(f"/posts/{create_posts[0].id + 5000}")
     assert get_correct_posts_by_id.status_code == 200
     assert get_incorrect_posts_by_id.status_code == 404
 
 def test_unauthorized_get_posts_by_id(create_posts, client):
-    get_correct_posts_by_id = client.get(f"/posts/{create_posts[0]['id']}")
+    get_correct_posts_by_id = client.get(f"/posts/{create_posts[0].id}")
     #print(f"LOOATME {get_correct_posts_by_id.json()}")
     assert get_correct_posts_by_id.status_code == 401
 
-def test_delete_post(create_posts, create_posts_user2, authenticate_test_user):
-    #print(f"USER1 POST - {create_posts}\nUSER2 POST - {create_posts_user2}")
-    delete_post = authenticate_test_user.delete(f"/posts/{create_posts[0]['id']}")
-    delete_unavailable_post = authenticate_test_user.delete(f"/posts/{create_posts[0]['id'] + 5000}")
-    delete_other_user_post = authenticate_test_user.delete(f"/posts/{create_posts_user2[0]['id']}")
+def test_delete_post(authenticate_test_user, create_posts):
+    #print(f"USER1 POST - {create_posts}\nUSER2 POST - {create_posts[0].id}")
+    delete_post = authenticate_test_user.delete(f"/posts/{create_posts[0].id}")   
     assert delete_post.status_code == 204
+    
+def test_delete_unavailable_post(authenticate_test_user, create_posts):
+    delete_unavailable_post = authenticate_test_user.delete(f"/posts/{create_posts[0].id + 5000}")
     assert delete_unavailable_post.status_code == 404
+
+def test_delete_other_user_post(authenticate_test_user, create_posts_user2):
+    #print(f"USER1 POST - {create_posts_user2}\nUSER2 POST - {create_posts_user2[0].id}")
+    delete_other_user_post = authenticate_test_user.delete(f"/posts/{create_posts_user2[0].id}")
     assert delete_other_user_post.status_code == 404
 
 def test_unauthorized_delete_post(create_posts, client):
-    unauthorized_delete_post = client.delete(f"/posts/{create_posts[0]['id']}")
+    unauthorized_delete_post = client.delete(f"/posts/{create_posts[0].id}")
     assert unauthorized_delete_post.status_code == 401
 
 
-def test_update_post(create_posts, authenticate_test_user, create_posts_user2):
+def test_update_post(authenticate_test_user, create_posts):
     data = {
         "title": "update dekho", "content": "updated content", "published": "False"
     }
-    update_post = authenticate_test_user.put(f"/posts/{create_posts[0]['id']}", json=data)
+    update_post = authenticate_test_user.put(f"/posts/{create_posts[0].id}", json=data)
     update_post_response = schemas.PostResponse(**update_post.json())
-    update_non_existing_post = authenticate_test_user.put(f"/posts/{create_posts[0]['id'] + 5000}", json=data)
-    update_other_user_post = authenticate_test_user.put(f"/posts/{create_posts_user2[0]['id']}", json=data)
+    update_non_existing_post = authenticate_test_user.put(f"/posts/{create_posts[0].id + 5000}", json=data)
     assert update_post.status_code == 200
     assert update_post_response.title == data['title']
-    assert update_other_user_post.status_code == 404
     assert update_non_existing_post.status_code == 404
+
+def test_update_other_user_post(authenticate_test_user, create_posts_user2):
+    data = {
+        "title": "update dekho", "content": "updated content", "published": "False"
+    }
+    update_other_user_post = authenticate_test_user.put(f"/posts/{create_posts_user2[0].id}", json=data)
+    assert update_other_user_post.status_code == 404
 
 def test_unauthorized_update_post(create_posts, client):
     data = {
         "title": "update dekho", "content": "updated content", "published": "False"
     }
-    unauthorized_update_post = client.put(f"/posts/{create_posts[0]['id']}", json=data)
+    unauthorized_update_post = client.put(f"/posts/{create_posts[0].id}", json=data)
     assert unauthorized_update_post.status_code == 401
 
 
 def test_vote_post(create_posts, authenticate_test_user):
-    vote_post = authenticate_test_user.post(f"/votes/", json={"post_id": create_posts[0]['id'], "vote_dir": 1})
+    vote_post = authenticate_test_user.post(f"/votes/", json={"post_id": create_posts[0].id, "vote_dir": 1})
     #print(f"LOOATME VOTE - {vote_post.json()} post_id - {create_posts[0]['id']}")
-    vote_non_existing_post = authenticate_test_user.post(f"/votes/", json={"post_id": int(create_posts[0]['id'] + 5000), "vote_dir": 1})
-    vote_post_twice = authenticate_test_user.post(f"/votes/", json={"post_id": create_posts[0]['id'], "vote_dir": 1})
+    vote_non_existing_post = authenticate_test_user.post(f"/votes/", json={"post_id": int(create_posts[0].id + 5000), "vote_dir": 1})
+    vote_post_twice = authenticate_test_user.post(f"/votes/", json={"post_id": create_posts[0].id, "vote_dir": 1})
     #print(f"Vote Twice - {vote_post_twice.json()}")
-    unvote_post = authenticate_test_user.post(f"/votes/", json={"post_id": create_posts[0]['id'], "vote_dir": 0})   
+    unvote_post = authenticate_test_user.post(f"/votes/", json={"post_id": create_posts[0].id, "vote_dir": 0})   
     assert vote_post.status_code == 200
     assert vote_non_existing_post.status_code == 404
     assert vote_post_twice.status_code == 409
@@ -123,5 +133,5 @@ def test_vote_post(create_posts, authenticate_test_user):
     
 
 def test_unauthorized_vote(create_posts, client):
-    unauthorized_vote = client.post(f"/votes/", json={"post_id": create_posts[0]['id'], "vote_dir": 1})
+    unauthorized_vote = client.post(f"/votes/", json={"post_id": create_posts[0].id, "vote_dir": 1})
     assert unauthorized_vote.status_code == 401

@@ -57,3 +57,14 @@ class VoteData(BaseModel):
     vote_dir: bool
     class Config:
         orm_mode = True
+
+class UserIdRequest(BaseModel):
+    email: EmailStr
+    adminToken: str
+    class Config:
+        orm_mode = True
+
+class UserId(BaseModel):
+    id: str
+    class Config:
+        orm_mode = True

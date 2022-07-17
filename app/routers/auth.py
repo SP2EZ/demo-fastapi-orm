@@ -14,10 +14,11 @@ def verify_login(payLoad: OAuth2PasswordRequestForm = Depends(), db: Session = D
     #record = database.cursor.execute(""" SELECT * FROM users WHERE email = %s """, (payLoad.username,)).fetchone()
     record = db.query(models.User).filter(models.User.email == payLoad.username).first()
     #print(f"User Details type: {type(record)} and User Details: {record}")
-    record = record.__dict__
+    
     if not record:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
-    
+        
+    record = record.__dict__
     if not utils.verify_password(payLoad.password, record['password']):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
     
