@@ -1,14 +1,14 @@
 [Unit]
-Description=Demo Project for Social Media API Server
+Description=Demo Project for Social Media API Server using ORM
 After=network.target
 
 [Service]
 User=supriyo
 Group=supriyo
-WorkingDirectory=/home/supriyo/fastapi-app/app/src
-Environment="PATH=/home/supriyo/fastapi-app/app/venvfastapi/bin"
+WorkingDirectory=/home/supriyo/fastapi-orm/app/src
+Environment="PATH=/home/supriyo/fastapi-orm/app/venvfastapi-orm/bin"
 EnvironmentFile=/home/supriyo/.env
-ExecStart=/home/supriyo/fastapi-app/app/venvfastapi/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000
+ExecStart=/home/supriyo/fastapi-orm/app/venvfastapi-orm/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000
 
 [Install]
 WantedBy=multi-user.target
